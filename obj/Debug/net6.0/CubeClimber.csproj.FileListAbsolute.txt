@@ -54,3 +54,5 @@ C:\Users\logan\Documents\RIT-CSH\CSHHACKS 2023\CubeClimber\bin\Debug\net6.0\Cont
 C:\Users\logan\Documents\RIT-CSH\CSHHACKS 2023\CubeClimber\bin\Debug\net6.0\Content\Grabbed.ogg
 C:\Users\logan\Documents\RIT-CSH\CSHHACKS 2023\CubeClimber\bin\Debug\net6.0\Content\Grabbed.xnb
 C:\Users\logan\Documents\RIT-CSH\CSHHACKS 2023\CubeClimber\bin\Debug\net6.0\Content\AnimationElement1.xnb
+C:\Users\logan\Documents\RIT-CSH\CSHHACKS 2023\CubeClimber\bin\Debug\net6.0\Content\WhiteGlow.xnb
+C:\Users\logan\Documents\RIT-CSH\CSHHACKS 2023\CubeClimber\bin\Debug\net6.0\devcade-library.dll

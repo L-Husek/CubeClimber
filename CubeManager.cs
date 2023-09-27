@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using Devcade;
 
 namespace CubeClimber
 {
     internal class CubeManager
     {
-        public static int SideUp = 0;
-        public static int Rot = 0;
-        public static char PanelDown = 'N';
+        public static int SideUp = 0; // From 0 to 5, the side currently facing up, view textures for reference/explanation
+        public static int Rot = 0; // From 0 to 3, the current rotation of the upward facing side, in 90 degree increments clockwise
+        public static char PanelDown = 'N'; // Char representing what panels currently touch the wall, if any. 'N' = none, 'H' = horizontal, 'V' = vertical
 
         static int[] LUT0 = { 1, 5, 4, 2 };
         static int[] LUT1 = { 2, 3, 5, 0 };
@@ -21,13 +25,13 @@ namespace CubeClimber
 
         static int[] ROTS = { 3, 3, 1, 3 };
 
-        public static void Roll(int dir)
+        /// <summary>
+        /// Rotate the cube in a direction represented by an int (0-3)
+        /// </summary>
+        /// <param name="dir"></param>
+        public static void Rotate(int dir)
         {
             // Determine new SideUp based on direction and rot. I am aware this could be simplified with an array of arrays, but this is easier to read and comprehend.
-            if (SideUp == 6)
-            {
-                SideUp = 5;
-            }
             int PrevSideUp = SideUp; // Save for next step.
             switch (SideUp)
             {

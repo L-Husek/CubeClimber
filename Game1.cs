@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualBasic;
+﻿using Devcade;
+using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -16,7 +17,15 @@ namespace CubeClimber
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        
+
+
+        // DEVCADE -------------------------------------------------------------
+        /// <summary>
+        /// Stores the window dimensions in a rectangle object for easy use.
+        /// </summary>
+        private Rectangle windowSize;
+
+
         // TEXTURES ------------------------------------------------------------
         // Cube
         private Texture2D side1;
@@ -27,6 +36,7 @@ namespace CubeClimber
         private Texture2D side6;
         private Texture2D WhiteCube;
         private Texture2D PinkGlow;
+        private Texture2D WhiteGlow;
         private Texture2D[] sides;
         // Panels
         private Texture2D hpanel;
@@ -73,23 +83,39 @@ namespace CubeClimber
         public bool isFalling = false;
         public int STUPIDLOCK = 0;
         public double AnimTimer1 = 0;
+        public bool Muted = false;
 
+        /// <summary>
+        /// Game constructor.
+        /// </summary>
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            IsMouseVisible = false;
         }
 
+        /// <summary>
+        /// Performs any setup that doesn't require loaded content before the first frame.
+        /// </summary>
         protected override void Initialize()
         {
-            // "_graphics" SETS WINDOW
-            _graphics.IsFullScreen = false;
+            Input.Initialize();
+
+            #region
+#if DEBUG
             _graphics.PreferredBackBufferWidth = SCREEN_WIDTH;
             _graphics.PreferredBackBufferHeight = SCREEN_HEIGHT;
+#else
+            _graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width;
+            _graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height;
+#endif
+            #endregion
             _graphics.ApplyChanges();
 
-            // Summon all the levels using code from levelmanager
+            windowSize = GraphicsDevice.Viewport.Bounds;
+
+            // Summon all the levels
             LevelManager.Giveth();
 
             // This code will have to be moved into a function which activates it as needed.
@@ -103,11 +129,14 @@ namespace CubeClimber
             base.Initialize();
         }
 
+        /// <summary>
+		/// Performs any setup that requires loaded content before the first frame.
+		/// </summary>
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // BUNCHA BULL SHIP
+            // BUNCHA BULL
             // Textures
             side1 = Content.Load<Texture2D>("RSide0");
             side2 = Content.Load<Texture2D>("RSide1");
@@ -117,6 +146,7 @@ namespace CubeClimber
             side6 = Content.Load<Texture2D>("RSide5");
             WhiteCube = Content.Load<Texture2D>("WhiteCube");
             PinkGlow = Content.Load<Texture2D>("PinkGlow");
+            WhiteGlow = Content.Load<Texture2D>("WhiteGlow");
             hpanel = Content.Load<Texture2D>("HorizontalPanels");
             vpanel = Content.Load<Texture2D>("VerticalPanels");
             cpanel = Content.Load<Texture2D>("CrossPanels");
@@ -141,26 +171,35 @@ namespace CubeClimber
             sides = new Texture2D[] { side1, side2, side3, side4, side5, side6, WhiteCube };
         }
 
+        /// <summary>
+		/// Your main update loop. This runs once every frame, over and over.
+		/// </summary>
+		/// <param name="gameTime">This is the gameTime object you can use to get the time since last frame.</param>
         protected override void Update(GameTime gameTime)
         {
-            // Quit Button
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+            Input.Update();
 
-            // Tell InputManager to get most recent input information
+            // My version, keeping for keyboard controls.
             InputManager.Update();
 
-            // Zoom Logic. Holding E decreases zoom multiplier (zooms in) and holding R increases zoom mutipler (zooms out)
-            /*if (InputManager.EHold)
+            // Quit Button
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape) ||
+                (Input.GetButton(1, Input.ArcadeButtons.Menu) &&
+                Input.GetButton(2, Input.ArcadeButtons.Menu)))
+            {
+                Exit();
+            }
+
+            if (InputManager.EHold || Input.GetButtonDown(1, Input.ArcadeButtons.A4))
             {
                 zoom *= 0.99;
             }
-            else if (InputManager.RHold)
+            else if (InputManager.RHold || Input.GetButtonDown(1, Input.ArcadeButtons.B4))
             {
                 zoom *= 1.01;
-            }*/
+            }
 
-            if (InputManager.EnterPress)
+            if (InputManager.EnterPress || Input.GetButtonDown(1, Input.ArcadeButtons.Menu))
             {
                 OneTimeMenu = false;
             }
@@ -170,11 +209,11 @@ namespace CubeClimber
             
             // Control Logic. If two movement inputs happen on the same frame, they take priority of Up, Down, Left, Right.
             if (Controls) {
-                if (InputManager.UpPress)
+                if (InputManager.UpPress || Input.GetButtonDown(1, Input.ArcadeButtons.StickUp))
                 {
                     if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1] - 1] != 'P') {
                         PlayerLocation[1] -= 1; // UP
-                        CubeManager.Roll(2);
+                        CubeManager.Rotate(2);
                         MediaPlayer.Play(MovementSound);
                         char Underneath = LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]];
                         if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]] == 'W') {
@@ -190,14 +229,14 @@ namespace CubeClimber
                         MediaPlayer.Play(HitMovementSound);
                     }
                 }
-                else if (InputManager.DownPress)
+                else if (InputManager.DownPress || Input.GetButtonDown(1, Input.ArcadeButtons.StickDown))
                 {
                     if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1] + 1] != 'P') {
                         PlayerLocation[1] += 1; // DOWN
-                        CubeManager.Roll(0);
+                        CubeManager.Rotate(0);
                         MediaPlayer.Play(MovementSound);
                         char Underneath = LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]];
-                        if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]] == 'W')
+                        if (Underneath == 'W')
                         {
                             WinSequence = 1;
                             Controls = false;
@@ -213,14 +252,14 @@ namespace CubeClimber
                         MediaPlayer.Play(HitMovementSound);
                     }
                 }
-                else if (InputManager.LeftPress)
+                else if (InputManager.LeftPress || Input.GetButtonDown(1, Input.ArcadeButtons.StickLeft))
                 {
                     if (LevelManager.Levels[L].Layout[PlayerLocation[0] - 1, PlayerLocation[1]] != 'P') {
                         PlayerLocation[0] -= 1; // LEFT
-                        CubeManager.Roll(1);
+                        CubeManager.Rotate(1);
                         MediaPlayer.Play(MovementSound);
                         char Underneath = LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]];
-                        if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]] == 'W')
+                        if (Underneath == 'W')
                         {
                             WinSequence = 1;
                             Controls = false;
@@ -236,14 +275,14 @@ namespace CubeClimber
                         MediaPlayer.Play(HitMovementSound);
                     }
                 }
-                else if (InputManager.RightPress)
+                else if (InputManager.RightPress || Input.GetButtonDown(1, Input.ArcadeButtons.StickRight))
                 {
                     if (LevelManager.Levels[L].Layout[PlayerLocation[0] + 1, PlayerLocation[1]] != 'P') {
                         PlayerLocation[0] += 1; // RIGHT
-                        CubeManager.Roll(3);
+                        CubeManager.Rotate(3);
                         MediaPlayer.Play(MovementSound);
                         char Underneath = LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]];
-                        if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]] == 'W')
+                        if (Underneath == 'W')
                         {
                             WinSequence = 1;
                             Controls = false;
@@ -264,12 +303,12 @@ namespace CubeClimber
             if (isFalling)
             {
                 TIMER += gameTime.ElapsedGameTime.TotalMilliseconds;
-                if (TIMER > 300) {
-                    if (STUPIDLOCK == 0) {
+                if (TIMER > 300) { // After 300 Milliseconds
+                    if (STUPIDLOCK == 0) { // Do only once
                         STUPIDLOCK++;
                         PlayerLocation[1] += 1;
                         char Underneath = LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]];
-                        if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]] == 'W') {
+                        if (Underneath == 'W') {
                             WinSequence = 1;
                             Controls = false;
                             MediaPlayer.Stop();
@@ -294,7 +333,7 @@ namespace CubeClimber
                         STUPIDLOCK++;
                         PlayerLocation[1] += 1;
                         char Underneath = LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]];
-                        if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]] == 'W') {
+                        if (Underneath == 'W') {
                             WinSequence = 1;
                             Controls = false;
                             MediaPlayer.Stop();
@@ -319,7 +358,7 @@ namespace CubeClimber
                         STUPIDLOCK++;
                         PlayerLocation[1] += 1;
                         char Underneath = LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]];
-                        if (LevelManager.Levels[L].Layout[PlayerLocation[0], PlayerLocation[1]] == 'W') {
+                        if (Underneath == 'W') {
                             WinSequence = 1;
                             Controls = false;
                             MediaPlayer.Stop();
@@ -416,6 +455,10 @@ namespace CubeClimber
             base.Update(gameTime); 
         }
 
+        /// <summary>
+		/// Your main draw loop. This runs once every frame, over and over.
+		/// </summary>
+		/// <param name="gameTime">This is the gameTime object you can use to get the time since last frame.</param>
         protected override void Draw(GameTime gameTime)
         {
             // Set default background color
@@ -450,7 +493,11 @@ namespace CubeClimber
                 }
             }
             // CUBE SHADOW
-            _spriteBatch.Draw(PinkGlow, new Rectangle(CamXFix(PlayerLocation[0] * UNIT - UNIT), CamYFix(PlayerLocation[1] * UNIT - UNIT), UNIT * 3, UNIT * 3), Color.White);
+            if (WinSequence > 0) {
+                _spriteBatch.Draw(WhiteGlow, new Rectangle(CamXFix(PlayerLocation[0] * UNIT - UNIT * 2), CamYFix(PlayerLocation[1] * UNIT - UNIT * 2), UNIT * 5, UNIT * 5), Color.White);
+            } else {
+                _spriteBatch.Draw(PinkGlow, new Rectangle(CamXFix(PlayerLocation[0] * UNIT - UNIT), CamYFix(PlayerLocation[1] * UNIT - UNIT), UNIT * 3, UNIT * 3), Color.White);
+            }
             _spriteBatch.Draw(sides[CubeManager.SideUp], new Rectangle(CamXFix(PlayerLocation[0] * UNIT + UNIT / 2), CamYFix(PlayerLocation[1] * UNIT + UNIT / 2), UNIT / 8 * 9, UNIT / 8 * 9), new Rectangle?(), Color.White, CubeManager.Rot * 90 * (float)Math.PI / 180, new Vector2(432, 432), SpriteEffects.None, 1f);
             // END
             /*
@@ -483,6 +530,7 @@ namespace CubeClimber
             return ((SCREEN_HEIGHT / 2) - i);
         }
 
+        // Translates all objects so that "CameraLocation" is at the center of the screen.
         public int CamXFix(int i)
         {
             return i + SCREEN_WIDTH/2 - UNIT/2 - CameraLocation[0]*UNIT;
@@ -490,6 +538,12 @@ namespace CubeClimber
         public int CamYFix(int i)
         {
             return i + SCREEN_HEIGHT/2 - UNIT/2 - CameraLocation[1]*UNIT;
+        }
+        public void AttemptSound(Song s)
+        {
+            if (Muted = true) {
+                MediaPlayer.Play(s);
+            }
         }
     }
 }

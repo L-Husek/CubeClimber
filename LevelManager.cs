@@ -15,17 +15,30 @@ namespace CubeClimber
         public static Level D = new Level();
         public static Level[] Levels = new Level[] {A, B, C, D};
 
+        /* The below function builds all levels in one go.
+         * 
+         * ---> Level layouts are stored as 2D char arrays.
+         * ---> Chars represent level objects.
+         * 
+         * A = Empty
+         * H = Horizontal Panels
+         * V = Vertical Panels
+         * C = Cross Panels
+         * W = Win Panel
+         * P = Horizontal Pipe Piece
+         */
         static public void Giveth()
         {
-            A.Layout = new char[5, 10];
-            for (int i = 0; i < 5; i++)
+            // BUILD LEVEL A
+            A.Layout = new char[5, 10]; // Create grid
+            for (int i = 0; i < 5; i++) // Fill with chars representing empty space ('A')
             {
                 for (int j = 0; j < 10; j++)
                 {
                     A.Layout[i, j] = 'A';
                 }
             }
-            A.Layout[1, 1] = 'C';
+            A.Layout[1, 1] = 'C'; // Fill non-empty tiles
             A.Layout[3, 1] = 'C';
             A.Layout[0, 3] = 'V';
             A.Layout[1, 4] = 'H';
@@ -34,15 +47,16 @@ namespace CubeClimber
             A.Layout[4, 3] = 'V';
             A.Layout[2, 2] = 'P';
             A.Layout[2, 1] = 'H';
+            A.Layout[2, 7] = 'W'; // VISUALLY sets the win tile.
             A.PlayerStartPlace = new int[] {2,1};
             A.PlayerStartSideUp = 2;
             A.PlayerStartRot = 2;
-            A.WinPlace = new int[] {2,2};
+            A.WinPlace = new int[] {2,2}; // FUNCTIONALLY sets the win tile.
 
-            B.Layout = new char[5, 8];
+            B.Layout = new char[5, 9];
             for (int i = 0; i < 5; i++)
             {
-                for (int j = 0; j < 6; j++)
+                for (int j = 0; j < 9; j++)
                 {
                     B.Layout[i, j] = 'A';
                 }
